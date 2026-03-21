@@ -77,9 +77,10 @@ function Profile() {
     fileInputRef.current.click();
   }
 
+
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
-    console.log(file);
+    console.log(file);  
 
     if(file) {
       const formData = new FormData();

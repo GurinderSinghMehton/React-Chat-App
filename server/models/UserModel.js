@@ -9,7 +9,9 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, "Password is required."], 
+        required: function(){
+            return this.isGoogleUser === true ? false : true
+        }, 
     },
     firstName: {
         type: String,
@@ -30,12 +32,23 @@ const userSchema = new mongoose.Schema({
     profileSetup: {
         type: Boolean,
         default: false,
-    }
+    },
+    isGoogleUser: {
+        type: Boolean,
+        default: false
+    },
+    // isVerified: {
+    //     type: Boolean,
+    //     default: this.isGoogleUser ? true : false,
+    // }
 });
 
 userSchema.pre("save", async function(next){
     const salt = await genSalt();
-    this.password = await hash(this.password, salt);
+    if(this.isGoogleUser === true){}
+    else{
+        this.password = await hash(this.password, salt);
+    }
     next();
 });
 

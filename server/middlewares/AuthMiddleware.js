@@ -12,4 +12,4 @@ export const verifyToken = (request, response, next) => {
         request.userId = payload.userId;
         next();
     })
-};
+};  

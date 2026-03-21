@@ -32,7 +32,6 @@ export const signup = async (request, response, next) => {
                 profileSetup: user.profileSetup,
             },
         })
-
     }
     catch(error) {
         console.log({error});
@@ -51,7 +50,11 @@ export const login = async (request, response, next) => {
 
         const user = await User.findOne({ email });
         if(!user) {
-            return response.status(404).send("User with the given email not found!");
+            return response.status(404).send("User with the given email does not exist!");
+        }
+
+        if(user?.isGoogleUser === true){
+            return response.status(400).send("Google User cannot login with password");
         }
 
         const auth = await compare(password, user.password);
@@ -82,6 +85,77 @@ export const login = async (request, response, next) => {
         return response.status(500).send("Internet Server Error");
     }
 
+}
+
+export const googlesignup =  async (request, response, next) => {
+    try{
+        const {email} = request.body;
+        if(!email){
+            return response.status(400).send("Email is required");
+        }
+
+        const checkUser = await User.findOne({email});
+        if(checkUser){
+            return response.status(400).send("User with the given email already exists");
+        }
+
+        const user = await User.create({email, isGoogleUser: true});
+
+        response.cookie("jwt", createToken({email, userId: user.id}), {
+            maxAge,
+            secure: true,
+            sameSite: "None",
+        });
+
+        return response.status(201).json({
+            user: {
+                id: user.id,
+                email: user.email,
+                profileSetup: user.profileSetup,
+            },
+        })
+        
+    }
+    catch (error) {
+        console.log({error});
+        return response.status(500).send("Internet Server Error");
+    }
+}
+
+export const googlelogin =  async (request, response, next) => {
+    try{
+        const {email} = request.body;
+        if(!email){
+            return response.status(400).send("Email is required");
+        }
+
+        const user = await User.findOne({email});
+        if(!user){
+            return response.status(400).send("User with the given email does not exists");
+        }
+
+        response.cookie("jwt", createToken({email, userId: user.id}), {
+            maxAge,
+            secure: true,
+            sameSite: "None",
+        });
+
+        return response.status(200).json({
+            user: {
+                id: user.id,
+                email: user.email,
+                profileSetup: user.profileSetup,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                image: user.image,
+                color: user.color,
+            },
+        })
+    }
+    catch (error) {
+        console.log({error});
+        return response.status(500).send("Internet Server Error");
+    }
 }
 
 export const getUserInfo = async (request, response, next) => {

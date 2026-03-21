@@ -41,6 +41,8 @@ function MessageBar() {
         messageType: "text",
         fileUrl: undefined,
       });
+
+      setMessage("");
     }
   };
 
@@ -63,23 +65,30 @@ function MessageBar() {
         });
 
         if (response.status === 200 && response.data) {
-            if(selectedChatType === "contact"){
-                socket.emit("sendMessage", {
-                    sender: userInfo.id,
-                    content: undefined,
-                    recipient: selectedChatData._id,
-                    messageType: "file",
-                    fileUrl: response.data.filePath,
-                });
-            }
+          if (selectedChatType === "contact") {
+            socket.emit("sendMessage", {
+              sender: userInfo.id,
+              content: undefined,
+              recipient: selectedChatData._id,
+              messageType: "file",
+              fileUrl: response.data.filePath,
+            });
+          }
         }
-
       }
-    console.log({file});
+      console.log({ file });
     } catch (error) {
       console.log({ error });
     }
   };
+
+  function handleKeyboardEvent(e) {
+    if (e.key === "Enter") {
+      if (message) {
+        handleSendMessage();
+      }
+    }
+  }
 
   return (
     <div className="h-[10vh] bg-[#1c1d25] flex justify-between items-center px-4 sm:px-6 md:px-8 mb-5 gap-3 sm:gap-5">
@@ -89,6 +98,7 @@ function MessageBar() {
           className="flex-1 p-3 sm:p-4 bg-transparent rounded-md text-sm sm:text-base focus:border-none focus:outline-none"
           placeholder="Enter a message..."
           value={message}
+          onKeyDown={(e) => handleKeyboardEvent(e)}
           onChange={(e) => setMessage(e.target.value)}
         />
 
