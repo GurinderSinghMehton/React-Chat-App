@@ -4,7 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import {
   Dialog,
@@ -23,29 +23,65 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useAppStore } from "@/store";
 
 function NewDm() {
-
   const { setSelectedChatType, setSelectedChatData } = useAppStore();
 
   const [openNewContactModal, setOpenNewContactModal] = useState(false);
   const [searchedContacts, setSearchedContacts] = useState([]);
 
-  const searchContacts = async (searchTerm) => {
-    try {
-      if (searchTerm.length > 0) {
-        const response = await apiClient.post(
-          SEARCH_CONTACTS_ROUTES,
-          { searchTerm },
-          { withCredentials: true }
-        );
+  const [hasSearchValue, setHasSearchValue] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncingRef = useRef(null);
+  const [page, setPage] = useState(1);
+  const [isFetching, setIsFetching] = useState(false);
 
-        if (response.status === 200 && response.data.contacts) {
-          setSearchedContacts(response.data.contacts);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const handleSearch = (value) => {
+    setHasSearchValue(value.trim().length > 0);
+    if (debouncingRef.current) {
+      clearTimeout(debouncingRef.current);
+    }
+
+    debouncingRef.current = setTimeout(() => {
+      setSearchTerm(value.trim());
+      setPage(1);
+      setSearchedContacts([]);
+    }, 800);
+  };
+
+  useEffect(() => {
+    const searchContacts = async (searchTerm) => {
+      setIsFetching(true);
+      try {
+        if (searchTerm.length > 0) {
+          const response = await apiClient.post(
+            SEARCH_CONTACTS_ROUTES,
+            { searchTerm, page: page, limit: 8 },
+            { withCredentials: true },
+          );
+
+          if (response.status === 200 && response.data.contacts) {
+            setSearchedContacts((prev) => [...prev, ...response.data.contacts]);
+            setTotalPages(response.data?.pagination?.totalPages);
+            setIsFetching(false);
+          }
         }
-      } else {
-        setSearchedContacts([]);
+      } catch (error) {
+        console.error(error);
+        setIsFetching(false);
       }
-    } catch (error) {
-      console.error(error);
+    };
+
+    searchContacts(searchTerm);
+  }, [searchTerm, page]);
+
+  const handleScroll = (e) => {
+    console.log("scrolling");
+    // if (isFetching || totalPages === page) return;
+    const target = e.target;
+    const { scrollHeight, clientHeight, scrollTop } = target;
+    if (scrollTop + clientHeight >= scrollHeight - 100) {
+      setPage((prev) => prev + 1);
     }
   };
 
@@ -54,7 +90,10 @@ function NewDm() {
     setSelectedChatType("contact");
     setSelectedChatData(contact);
     setSearchedContacts([]);
-  }
+    setHasSearchValue(false);
+    setPage(1);
+    setSearchTerm("");
+  };
 
   return (
     <>
@@ -83,18 +122,19 @@ function NewDm() {
             <Input
               placeholder="Search Contacts"
               className="rounded-lg p-6 bg-[#2c2e3b] border-none"
-              onChange={(e) => searchContacts(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
 
-          {
-            searchContacts.length > 0 && (
-            <ScrollArea className="h-[250px]">
-
-            <div className="flex flex-col gap-5">
-              {searchedContacts.map((contact) => (
+          {searchedContacts.length > 0 && (
+            // <ScrollArea className="" >
+            <div
+              className="h-[250px] w-full flex flex-col gap-5 overflow-y-auto"
+              onScroll={handleScroll}
+            >
+              {searchedContacts?.map((contact) => (
                 <div
-                  key={contact._id}
+                  key={contact?._id}
                   className="flex gap-3 items-center cursor-pointer"
                   onClick={() => selectNewContact(contact)}
                 >
@@ -109,12 +149,12 @@ function NewDm() {
                       ) : (
                         <div
                           className={`uppercase h-12 w-12 text-lg border-[1px] flex items-center  justify-center rounded-full ${getColor(
-                            contact.color
+                            contact.color,
                           )}`}
                         >
                           {contact.firstName
-                            ? contact.firstName.split("").shift()
-                            : contact.email.split("").shift()}
+                            ? contact.firstName?.split("").shift()
+                            : contact.email?.split("").shift()}
                         </div>
                       )}
                     </Avatar>
@@ -122,20 +162,19 @@ function NewDm() {
 
                   <div className="flex flex-col">
                     <span>
-                        {contact.firstName && contact.lastName
-                          ? `${contact.firstName} ${contact.lastName}`
-                          : contact.email
-                        }
+                      {contact.firstName && contact.lastName
+                        ? `${contact.firstName} ${contact.lastName}`
+                        : contact.email}
                     </span>
                     <span className="text-xs">{contact.email}</span>
                   </div>
                 </div>
               ))}
             </div>
-          </ScrollArea> )
-          }
+            // </ScrollArea>
+          )}
 
-          {searchedContacts.length <= 0 && (
+          {searchedContacts.length <= 0 && isFetching && (
             <div className="flex-1 md:flex flex-col justify-center items-center duration-1000 transition-all">
               <Lottie
                 isClickToPauseDisabled={true}
@@ -153,6 +192,10 @@ function NewDm() {
                 </h3>
               </div>
             </div>
+          )}
+
+          {!isFetching && page === 1 && searchedContacts.length === 0 && (
+            <div>No Contact Found.</div>
           )}
         </DialogContent>
       </Dialog>

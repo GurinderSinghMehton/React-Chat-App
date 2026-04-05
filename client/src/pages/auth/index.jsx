@@ -64,7 +64,7 @@ function Auth() {
         const response = await apiClient.post(
           LOGIN_ROUTE,
           { email, password },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         if (response.data.user.id) {
@@ -90,12 +90,12 @@ function Auth() {
         const response = await apiClient.post(
           SIGNUP_ROUTE,
           { email, password },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         if (response.status === 201) {
           // navigate("/verify-otp")
-          navigate("/profile")
+          navigate("/profile");
           setUserInfo(response.data.user);
         }
       } catch (error) {
@@ -118,7 +118,7 @@ function Auth() {
         const response = await apiClient.post(
           GOOGLE_USER_SIGNUP_ROUTE,
           { email },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         if (response.status === 201) {
@@ -142,7 +142,7 @@ function Auth() {
         const response = await apiClient.post(
           GOOGLE_USER_LOGIN_ROUTE,
           { email },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         if (response.data.user.id) {
@@ -158,6 +158,12 @@ function Auth() {
       toast.error(error.response.data);
     }
   };
+
+  function handleResetValues() {
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+  }
 
   return (
     <div className="h-[100vh] w-[100vw] flex items-center justify-center">
@@ -184,12 +190,14 @@ function Auth() {
                 <TabsTrigger
                   value="login"
                   className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-purple-500 p-3 transition-all duration-300"
+                  onClick={handleResetValues}
                 >
                   Login
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
                   className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-purple-500 p-3 transition-all duration-300"
+                  onClick={handleResetValues}
                 >
                   Signup
                 </TabsTrigger>
@@ -208,6 +216,7 @@ function Auth() {
                   type="password"
                   className="rounded-full p-6"
                   value={password}
+                  id="authLoginPassword"
                   onChange={(e) => setPassword(e.target.value)}
                 />
 
@@ -221,12 +230,15 @@ function Auth() {
                 <Button className="rounded-full p-6" onClick={handleLogin}>
                   Login
                 </Button>
-                <div
-                  className="flex items-center gap-2 justify-center cursor-pointer lg:justify-end"
-                  onClick={handleGoogleLogin}
-                >
-                  {" "}
-                  <FcGoogle className="text-[20px]" /> <span>Sign Up</span>{" "}
+
+                <div className="flex items-center gap-2 justify-center cursor-pointer lg:justify-end">
+                  <div
+                    className="w-[100px] flex items-center gap-2 justify-center border border-black rounded-2xl"
+                    onClick={handleGoogleLogin}
+                  >
+                    <FcGoogle className="text-[20px]" />{" "}
+                    <span>Sign Up</span>{" "}
+                  </div>{" "}
                 </div>
               </TabsContent>
               <TabsContent className="flex flex-col gap-5" value="signup">
@@ -243,6 +255,7 @@ function Auth() {
                   type="password"
                   className="rounded-full p-6"
                   value={password}
+                  id="authSignPassword"
                   onChange={(e) => setPassword(e.target.value)}
                 />
 
@@ -251,18 +264,21 @@ function Auth() {
                   type="password"
                   className="rounded-full p-6"
                   value={confirmPassword}
+                  id="authConfirmSignPassword"
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
 
                 <Button className="rounded-full p-6" onClick={handleSignup}>
                   Signup
                 </Button>
-                <div
-                  className="flex items-center gap-2 justify-center cursor-pointer lg:justify-end"
-                  onClick={handleGoogleSignup}
-                >
-                  {" "}
-                  <FcGoogle className="text-[20px]" /> <span>Sign In</span>{" "}
+                <div className="flex items-center gap-2 justify-center cursor-pointer lg:justify-end">
+                  <div
+                    className="w-[100px] flex items-center gap-2 justify-center border border-black rounded-2xl"
+                    onClick={handleGoogleSignup}
+                  >
+                    <FcGoogle className="text-[20px]  " />{" "}
+                    <span>Sign In</span>{" "}
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
