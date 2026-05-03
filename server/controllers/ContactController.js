@@ -33,13 +33,23 @@ export const searchContacts = async (request, response, next) => {
     const totalContacts = await User.countDocuments(query);
 
     // paginated contacts
-    const contacts = await User.find(query)
-      .skip(skip)
-      .limit(limit)
-      .select("_id email firstName lastName image color profileSetup");
+    const contacts = await User.find(query).skip(skip).limit(limit);
+    // .select("_id email firstName lastName image color profileSetup");
+
+    const data = contacts.map((user) => ({
+      _id: user._id,
+      label: user.firstName ? `${user.firstName} ${user.lastName}` : user.email,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileSetup: user.profileSetup,
+      image: user.image,
+      value: user._id,
+      color: user.color,
+    }));
 
     return response.status(200).json({
-      contacts,
+      contacts: data,
       pagination: {
         totalContacts,
         currentPage: page,
@@ -115,16 +125,43 @@ export const getContactsForDMList = async (request, response, next) => {
 
 export const getAllContacts = async (request, response, next) => {
   try {
-    const users = await User.find(
-      { _id: { $ne: request.userId } },
-      "firstName lastName _id email",
-    );
+    let { page = 1, limit = 10 } = request.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const skip = (page - 1) * limit;
+
+    const query = {
+      $and: [{ _id: { $ne: request.userId } }, { profileSetup: true }],
+    };
+
+    // total users count
+    const totalContacts = await User.countDocuments(query);
+
+    // paginated users
+    const users = await User.find(query, "firstName lastName _id email")
+      .skip(skip)
+      .limit(limit);
 
     const contacts = users.map((user) => ({
+      _id: user._id,
       label: user.firstName ? `${user.firstName} ${user.lastName}` : user.email,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      value: user._id
     }));
 
-    return response.status(200).json({ contacts });
+    return response.status(200).json({
+      contacts,
+      pagination: {
+        totalContacts,
+        currentPage: page,
+        totalPages: Math.ceil(totalContacts / limit),
+        limit,
+      },
+    });
   } catch (err) {
     console.log({ err });
     return response.status(500).send("Internal Server Error");
