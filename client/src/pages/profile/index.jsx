@@ -35,7 +35,7 @@ function Profile() {
     }
 
     if (userInfo.image) {
-      setImage(`${HOST}/${userInfo.image}`);
+      setImage(`${userInfo.image}`);
     }
   }, [userInfo]);
 
