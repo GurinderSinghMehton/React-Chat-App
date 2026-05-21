@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: react-chat-app
+    env: node
+    region: oregon
+    plan: free
+    
+    # Root directory where package.json is
+    rootDir: server
+    
+    # Build command - installs deps and builds frontend
+    buildCommand: npm install && npm run build && npm install --production
+    
+    # Start command
+    startCommand: npm start
+    
+    # Environment variables - configure these in Render dashboard
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        scope: build
+        sync: false
+      - key: ORIGIN
+        scope: build
+        sync: false
