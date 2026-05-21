@@ -1,7 +1,7 @@
 import { compare } from "bcrypt";
 import User from "../models/UserModel.js";
 import jwt from "jsonwebtoken";
-import {renameSync, unlinkSync} from "fs"
+import { v2 as cloudinary } from "cloudinary";
 
 const maxAge = 3  * 24 * 60 * 1000;
 
@@ -221,11 +221,13 @@ export const addProfileImage = async (request, response, next) => {
             return response.status(400).send("File is required.");
         }
 
-        const date = Date.now(); 
-        let fileName = "uploads/profiles/" + date + request.file.originalname;
-        renameSync(request.file.path, fileName);
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(request.file.path, {
+            folder: "react-chat-app/profiles",
+            resource_type: "auto"
+        });
 
-        const updatedUser = await User.findByIdAndUpdate(request.userId, { image: fileName}, { new: true, runValidators: true});
+        const updatedUser = await User.findByIdAndUpdate(request.userId, { image: result.secure_url}, { new: true, runValidators: true});
 
         return response.status(200).json({
             image: updatedUser.image,
@@ -233,7 +235,7 @@ export const addProfileImage = async (request, response, next) => {
     }
     catch (error) {
         console.log({error});
-        return response.status(500).send("Internet Server Error");
+        return response.status(500).send("Profile image upload failed");
     }
 }
 
@@ -247,10 +249,8 @@ export const removeProfileImage = async (request, response, next) => {
             return response.status(404).send("User not found.");
         }
 
-        if(user.image) {
-            unlinkSync(user.image)
-        }
-
+        // With Cloudinary, we don't need to manually delete files
+        // Just remove the URL from database
         user.image = null;
         await user.save();
 

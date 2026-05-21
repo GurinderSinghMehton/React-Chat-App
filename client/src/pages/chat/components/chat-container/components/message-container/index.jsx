@@ -158,7 +158,7 @@ function MessageContainer() {
               }}
             >
               <img
-                src={`${HOST}/${message.fileUrl}`}
+                src={`${message.fileUrl}`}
                 height={400}
                 width={400}
               />
@@ -196,7 +196,7 @@ function MessageContainer() {
         <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex items-center justify-center backdrop-blur-lg flex-col">
           <div ref={imageRef}>
             <img
-              src={`${HOST}/${imageUrl}`}
+              src={`${imageUrl}`}
               className="h-[80vh] w-full bg-cover"
               alt=""
             />
