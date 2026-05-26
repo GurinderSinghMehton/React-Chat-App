@@ -66,6 +66,7 @@ export const searchContacts = async (request, response, next) => {
 export const getContactsForDMList = async (request, response, next) => {
   try {
     let { userId } = request;
+
     userId = new mongoose.Types.ObjectId(userId);
 
     const contacts = await Message.aggregate([
@@ -74,9 +75,11 @@ export const getContactsForDMList = async (request, response, next) => {
           $or: [{ sender: userId }, { recipient: userId }],
         },
       },
+
       {
         $sort: { timestamp: -1 },
       },
+
       {
         $group: {
           _id: {
@@ -86,9 +89,26 @@ export const getContactsForDMList = async (request, response, next) => {
               else: "$sender",
             },
           },
+
           lastMessageTime: { $first: "$timestamp" },
+
+          unreadCount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$recipient", userId] },
+                    { $eq: ["$isRead", false] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
         },
       },
+
       {
         $lookup: {
           from: "users",
@@ -97,13 +117,17 @@ export const getContactsForDMList = async (request, response, next) => {
           as: "contactInfo",
         },
       },
+
       {
         $unwind: "$contactInfo",
       },
+
       {
         $project: {
           _id: 1,
           lastMessageTime: 1,
+          unreadCount: 1,
+
           email: "$contactInfo.email",
           firstName: "$contactInfo.firstName",
           lastName: "$contactInfo.lastName",
@@ -111,6 +135,7 @@ export const getContactsForDMList = async (request, response, next) => {
           color: "$contactInfo.color",
         },
       },
+
       {
         $sort: { lastMessageTime: -1 },
       },
@@ -119,7 +144,8 @@ export const getContactsForDMList = async (request, response, next) => {
     return response.status(200).json({ contacts });
   } catch (error) {
     console.log({ error });
-    return response.status(500).send("Internet Server Error");
+
+    return response.status(500).send("Internal Server Error");
   }
 };
 

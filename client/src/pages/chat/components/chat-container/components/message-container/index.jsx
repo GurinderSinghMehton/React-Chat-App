@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store";
 import moment from "moment";
 import { apiClient } from "@/lib/api-client";
-import { GET_ALL_MESSAGES_ROUTE, HOST } from "@/utils/constants";
+import { GET_ALL_MESSAGES_ROUTE, HOST, READ_MESSAGES } from "@/utils/constants";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
 import { IoCloseSharp } from "react-icons/io5";
@@ -30,6 +30,12 @@ function MessageContainer() {
       try {
         const response = await apiClient.post(
           GET_ALL_MESSAGES_ROUTE,
+          { id: selectedChatData._id },
+          { withCredentials: true },
+        );
+
+        await apiClient.post(
+          READ_MESSAGES,
           { id: selectedChatData._id },
           { withCredentials: true },
         );
@@ -87,8 +93,8 @@ function MessageContainer() {
       responseType: "blob",
       onDownloadProgress: (progressEvent) => {
         const { loaded, total } = progressEvent;
-        const percentageCompleted = Math.round((loaded * 100) / total );
-        setDownloadProgress(percentageCompleted)
+        const percentageCompleted = Math.round((loaded * 100) / total);
+        setDownloadProgress(percentageCompleted);
       },
     });
 
@@ -100,7 +106,7 @@ function MessageContainer() {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(urlBlob);
-    setIsDownloading(false)
+    setIsDownloading(false);
     if (response.status === 200) {
       setShowImage(false);
     }
@@ -157,11 +163,7 @@ function MessageContainer() {
                 setImageUrl(message.fileUrl);
               }}
             >
-              <img
-                src={`${message.fileUrl}`}
-                height={400}
-                width={400}
-              />
+              <img src={`${message.fileUrl}`} height={400} width={400} />
             </div>
           ) : (
             <div className="flex items-center justify-center gap-4">

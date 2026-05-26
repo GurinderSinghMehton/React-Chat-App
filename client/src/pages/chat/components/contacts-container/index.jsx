@@ -38,7 +38,7 @@ function ContactsContainer() {
         </div>
 
         <div className="max-h-[30vh] overflow-y-auto scrollbar-hidden">
-          <ContactList contacts={directMessagesContacts} />
+          <ContactList contacts={directMessagesContacts} isChannel={false} />
         </div>
       </div>
 

@@ -50,7 +50,7 @@ export const login = async (request, response, next) => {
 
         const user = await User.findOne({ email });
         if(!user) {
-            return response.status(404).send("User with the given email does not exist!");
+            return response.status(404).send("Email/Password is incorrect!");
         }
 
         if(user?.isGoogleUser === true){
@@ -59,7 +59,7 @@ export const login = async (request, response, next) => {
 
         const auth = await compare(password, user.password);
         if(!auth) {
-            return response.status(400).send("Password is incorrect!");
+            return response.status(400).send("Email/Password is incorrect!");
         }
 
         response.cookie("jwt", createToken({email, userId:user.id}), {

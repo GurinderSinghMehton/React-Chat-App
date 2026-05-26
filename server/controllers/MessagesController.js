@@ -42,3 +42,30 @@ export const uploadFile = async (request, response, next) => {
     return response.status(500).send("File upload failed");
   }
 };
+
+export const readMessage = async (request, response, next) => {
+  try {
+    const recipientId = request.userId;
+    const senderId = request.body.id;
+
+    if (!senderId || !recipientId) {
+      return response.status(400).send("Both User ID's are required!");
+    }
+
+    await Message.updateMany(
+      {
+        sender: senderId,
+        recipient: recipientId,
+        isRead: false,
+      },
+      {
+        $set: { isRead: true },
+      },
+    );
+
+    return response.status(200).send("Success");
+  } catch (error) {
+    console.log({ error });
+    return response.status(500).send("Internet Server Error");
+  }
+};

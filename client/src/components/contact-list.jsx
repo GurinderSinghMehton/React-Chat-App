@@ -11,6 +11,7 @@ function ContactList({ contacts, isChannel = false }) {
     selectedChatType,
     setSelectedChatType,
     setSelectedChatMessages,
+    setDirectMessagesContacts,
   } = useAppStore();
 
   const handleClick = (contact) => {
@@ -22,6 +23,11 @@ function ContactList({ contacts, isChannel = false }) {
     if (selectedChatData && selectedChatData._id !== contact.id) {
       setSelectedChatMessages([]);
     }
+
+    const updatedContacts = contacts.map((item) =>
+      item._id === contact._id ? { ...item, unreadCount: 0 } : item,
+    );
+    setDirectMessagesContacts(updatedContacts);
   };
 
   return (
@@ -68,10 +74,19 @@ function ContactList({ contacts, isChannel = false }) {
                 #
               </div>
             )}
+
             {isChannel ? (
               <span>{contact.name}</span>
             ) : (
               <span>{`${contact.firstName} ${contact.lastName}`}</span>
+            )}
+
+            {contact.unreadCount > 0 && (
+              <span
+                className={`rounded-full bg-purple-500 h-5 flex items-center justify-center ${contact.unreadCount > 9 ? "w-9" : "w-5"}`}
+              >
+                {contact.unreadCount}
+              </span>
             )}
           </div>
         </div>

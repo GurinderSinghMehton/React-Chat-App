@@ -19,3 +19,4 @@ export const GET_ALL_CONTACTS_ROUTES = `${CONTACTS_ROUTE}/get-all-contacts`;
 export const MESSAGES_ROUTES = "api/messages";
 export const GET_ALL_MESSAGES_ROUTE = `${MESSAGES_ROUTES}/get-messages`;
 export const UPLOAD_FILES_ROUTE = `${MESSAGES_ROUTES}/upload-file`;
+export const READ_MESSAGES = `${MESSAGES_ROUTES}/read-messages`;

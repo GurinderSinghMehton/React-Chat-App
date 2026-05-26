@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Background from "../../assets/background.png";
 import Victory from "../../assets/victory.svg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +24,9 @@ function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [currentTab, setCurrentTab] = useState("login");
+  const [loading, setLoading] = useState(false);
 
   const validateSignup = () => {
     if (!email.length) {
@@ -59,7 +62,9 @@ function Auth() {
   };
 
   const handleLogin = async () => {
+    if (loading) return;
     if (validateLogin()) {
+      setLoading(true);
       try {
         const response = await apiClient.post(
           LOGIN_ROUTE,
@@ -68,6 +73,7 @@ function Auth() {
         );
 
         if (response.data.user.id) {
+          setLoading(false);
           setUserInfo(response.data.user);
           if (response.data.user.profileSetup) {
             navigate("/chat");
@@ -76,6 +82,7 @@ function Auth() {
           }
         }
       } catch (error) {
+        setLoading(false);
         toast.error(error.response.data);
         setEmail("");
         setPassword("");
@@ -85,7 +92,9 @@ function Auth() {
   };
 
   const handleSignup = async () => {
+    if (loading) return;
     if (validateSignup()) {
+      setLoading(true);
       try {
         const response = await apiClient.post(
           SIGNUP_ROUTE,
@@ -94,11 +103,13 @@ function Auth() {
         );
 
         if (response.status === 201) {
+          setLoading(false);
           // navigate("/verify-otp")
           navigate("/profile");
           setUserInfo(response.data.user);
         }
       } catch (error) {
+        setLoading(false);
         toast.error(error.response.data);
         setEmail("");
         setPassword("");
@@ -159,11 +170,30 @@ function Auth() {
     }
   };
 
-  function handleResetValues() {
+  function handleResetValues(tab) {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    if (tab) setCurrentTab(tab);
   }
+
+  useEffect(() => {
+    function handleKeyboardEvent(e) {
+      e.stopPropagation();
+      if (e.key === "Enter") {
+        if (currentTab === "login") {
+          handleLogin();
+        }
+        if (currentTab === "signup") {
+          handleSignup();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyboardEvent);
+
+    return () => document.removeEventListener("keydown", handleKeyboardEvent);
+  }, [currentTab, email, password, confirmPassword, loading]);
 
   return (
     <div className="h-[100vh] w-[100vw] flex items-center justify-center">
@@ -190,14 +220,14 @@ function Auth() {
                 <TabsTrigger
                   value="login"
                   className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-purple-500 p-3 transition-all duration-300"
-                  onClick={handleResetValues}
+                  onClick={() => handleResetValues("login")}
                 >
                   Login
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
                   className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-purple-500 p-3 transition-all duration-300"
-                  onClick={handleResetValues}
+                  onClick={() => handleResetValues("signup")}
                 >
                   Signup
                 </TabsTrigger>
@@ -227,7 +257,11 @@ function Auth() {
                   Forget Password?
                 </Link>
 
-                <Button className="rounded-full p-6" onClick={handleLogin}>
+                <Button
+                  className="rounded-full p-6"
+                  onClick={handleLogin}
+                  disabled={loading}
+                >
                   Login
                 </Button>
 
@@ -268,7 +302,11 @@ function Auth() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
 
-                <Button className="rounded-full p-6" onClick={handleSignup}>
+                <Button
+                  className="rounded-full p-6"
+                  onClick={handleSignup}
+                  disabled={loading}
+                >
                   Signup
                 </Button>
                 <div className="flex items-center gap-2 justify-center cursor-pointer lg:justify-end">
